@@ -1,0 +1,146 @@
+
+# chrysanthemum_methylation.py
+
+from typing import List, Dict
+
+class ChrysanthemumMethylation:
+    def __init__(self, sample_weight: float, methylation_agent_concentration: float, reaction_time: float, reaction_temperature: float):
+        """
+        Initialize the methylation process parameters.
+        
+        :param sample_weight: Weight of the chrysanthemum leaf sample (grams)
+        :param methylation_agent_concentration: Methylation agent concentration (%)
+        :param reaction_time: Reaction duration (hours)
+        :param reaction_temperature: Reaction temperature (°C)
+        """
+        self.sample_weight = sample_weight
+        self.methylation_agent_concentration = methylation_agent_concentration
+        self.reaction_time = reaction_time
+        self.reaction_temperature = reaction_temperature
+        self.methylation_level = 0.0
+
+    def validate_inputs(self):
+        """
+        Validates inputs to ensure they are within realistic and non-negative ranges.
+        """
+        if self.sample_weight <= 0:
+            raise ValueError("Sample weight must be greater than 0.")
+        if not (0 < self.methylation_agent_concentration <= 100):
+            raise ValueError("Methylation agent concentration must be between 0 and 100%.")
+        if self.reaction_time <= 0:
+            raise ValueError("Reaction time must be greater than 0.")
+        if not (0 < self.reaction_temperature <= 100):
+            raise ValueError("Reaction temperature must be between 0°C and 100°C.")
+
+    def prepare_sample(self) -> float:
+        """
+        Simulates sample preparation by reducing weight due to preprocessing.
+        """
+        prepared_weight = self.sample_weight * 0.95  # Assume 5% loss
+        return prepared_weight
+
+    def react(self, prepared_weight: float) -> float:
+        """
+        Simulates the methylation reaction.
+        
+        :param prepared_weight: Weight of prepared sample
+        :return: Methylation level
+        """
+        # Methylation level calculation
+        base_rate = (self.methylation_agent_concentration / 100) * (self.reaction_temperature / 50)
+        methylation_efficiency = base_rate * (1 - 0.1 ** self.reaction_time)  # Diminishing returns over time
+        methylation_level = prepared_weight * methylation_efficiency
+        return methylation_level
+
+    def analyze(self, methylation_level: float) -> float:
+        """
+        Analyzes methylation efficiency.
+        
+        :param methylation_level: The calculated methylation level
+        :return: Methylation efficiency as a percentage
+        """
+        efficiency = (methylation_level / self.sample_weight) * 100
+        return efficiency
+
+    def process(self) -> Dict[str, float]:
+        """
+        Runs the full methylation process pipeline.
+        
+        :return: A dictionary containing methylation results
+        """
+        self.validate_inputs()
+        prepared_weight = self.prepare_sample()
+        methylation_level = self.react(prepared_weight)
+        methylation_efficiency = self.analyze(methylation_level)
+        return {
+            "prepared_weight": prepared_weight,
+            "methylation_level": methylation_level,
+            "methylation_efficiency": methylation_efficiency,
+        }
+
+
+class BatchMethylationProcessor:
+    def __init__(self, samples: List[Dict[str, float]]):
+        """
+        Initialize batch processor with a list of samples.
+        
+        :param samples: List of dictionaries containing sample data
+        """
+        self.samples = samples
+
+    def process_all(self) -> List[Dict[str, float]]:
+        """
+        Processes all samples in the batch.
+        
+        :return: List of results for all samples
+        """
+        results = []
+        for idx, sample in enumerate(self.samples, start=1):
+            print(f"\nProcessing Sample {idx}:")
+            try:
+                methylation = ChrysanthemumMethylation(
+                    sample_weight=sample["sample_weight"],
+                    methylation_agent_concentration=sample["methylation_agent_concentration"],
+                    reaction_time=sample["reaction_time"],
+                    reaction_temperature=sample["reaction_temperature"]
+                )
+                result = methylation.process()
+                result["sample_id"] = idx
+                results.append(result)
+            except ValueError as e:
+                print(f"Error processing Sample {idx}: {e}")
+        return results
+
+    def generate_report(self, results: List[Dict[str, float]]):
+        """
+        Prints a report summarizing the results of the batch process.
+        
+        :param results: List of dictionaries containing methylation results
+        """
+        print("\n--- Methylation Batch Report ---")
+        for result in results:
+            print(f"Sample {result['sample_id']}:")
+            print(f"  Prepared Weight: {result['prepared_weight']:.2f} g")
+            print(f"  Methylation Level: {result['methylation_level']:.2f} units")
+            print(f"  Methylation Efficiency: {result['methylation_efficiency']:.2f}%")
+        print("--- End of Report ---")
+
+
+if __name__ == "__main__":
+    # Define a batch of samples
+    sample_data = [
+        {"sample_weight": 10.0, "methylation_agent_concentration": 20.0, "reaction_time": 3.0, "reaction_temperature": 60.0},
+        {"sample_weight": 8.0, "methylation_agent_concentration": 25.0, "reaction_time": 2.5, "reaction_temperature": 55.0},
+        {"sample_weight": 12.0, "methylation_agent_concentration": 15.0, "reaction_time": 4.0, "reaction_temperature": 65.0},
+    ]
+
+    # Process the batch
+    batch_processor = BatchMethylationProcessor(samples=sample_data)
+    batch_results = batch_processor.process_all()
+
+    # Generate the report
+    batch_processor.generate_report(batch_results)
+
+
+
+
